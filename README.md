@@ -38,7 +38,7 @@ yarn add saferror
 pnpm add saferror
 ```
 
-> **Requirements:** Node.js ≥ 22 (uses `Promise.try`), TypeScript ≥ 5.0 (for `using`-safe patterns).
+> **Requirements:** Node.js ≥ 22.3.0 (uses `Promise.try`, unflagged in 22.3.0), TypeScript ≥ 5.0.
 
 ---
 
