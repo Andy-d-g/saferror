@@ -30,7 +30,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          # Workaround for npm bug #4828: optional platform-specific bindings are sometimes
+          # skipped during transitive installs. Explicitly install the Linux x64 native
+          # binding that vite-plus requires on this runner.
+          npm install @voidzero-dev/vite-plus-linux-x64-gnu --no-save
 
       - name: Type check
         run: npm run typecheck
