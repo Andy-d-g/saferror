@@ -1,0 +1,55 @@
+{
+  "name": "saferror",
+  "version": "1.0.0",
+  "description": "Type-safe error handling for TypeScript: structured errors, safe try/catch, and serialization.",
+  "keywords": [
+    "error",
+    "typescript",
+    "safe-try",
+    "result",
+    "error-handling",
+    "type-safe",
+    "custom-error",
+    "serialize-error"
+  ],
+  "author": "Andy Guillaume <andy.guillaume75@gmail.com>",
+  "license": "ISC",
+  "homepage": "https://github.com/andyguillaume/saferror#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andyguillaume/saferror.git"
+  },
+  "bugs": {
+    "url": "https://github.com/andyguillaume/saferror/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --platform node --clean",
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run",
+    "test:watch": "vp test",
+    "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^6.0.0",
+    "vite-plus": "^0.1.22"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
