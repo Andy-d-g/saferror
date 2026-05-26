@@ -4,7 +4,7 @@
 [![CI](https://github.com/andyguillaume/saferror/actions/workflows/ci.yml/badge.svg)](https://github.com/andyguillaume/saferror/actions/workflows/ci.yml)
 [![npm downloads](https://img.shields.io/npm/dm/saferror.svg?style=flat-square)](https://www.npmjs.com/package/saferror)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](LICENSE)
-[![Node.js >=22](https://img.shields.io/badge/node-%3E%3D22-brightgreen?style=flat-square)](https://nodejs.org)
+[![Node.js >=23](https://img.shields.io/badge/node-%3E%3D23-brightgreen?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
 > Type-safe, structured error handling for TypeScript. Stop catching `unknown`, start catching what you actually expect.
@@ -38,7 +38,7 @@ yarn add saferror
 pnpm add saferror
 ```
 
-> **Requirements:** Node.js ≥ 22.3.0 (uses `Promise.try`, unflagged in 22.3.0), TypeScript ≥ 5.0.
+> **Requirements:** Node.js ≥ 23.0.0, TypeScript ≥ 5.0.
 
 ---
 
