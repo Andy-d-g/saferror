@@ -4,6 +4,24 @@ import { UnknownError } from "./unknown-error";
 export type Result<T = null, E extends CustomError = CustomError> = Promise<[E] | [null, T]>;
 
 /**
+ * Portable equivalent of `Promise.try`.
+ * Uses the native implementation when available, falls back to a
+ * `try/catch` + `Promise.resolve` wrapper for older environments.
+ *
+ * @param fn - sync or async function to execute
+ */
+function tryPromise<T>(fn: () => T | Promise<T>): Promise<T> {
+  if (typeof Promise.try === "function") {
+    return Promise.try(fn);
+  }
+  try {
+    return Promise.resolve(fn());
+  } catch (e) {
+    return Promise.reject(e);
+  }
+}
+
+/**
  * Universal safe execution wrapper.
  * Handles both sync functions (that may throw) and async functions (that may reject).
  * Returns an [err, result] tuple — never throws.
@@ -26,7 +44,7 @@ export function safeTry<T, E extends CustomError = CustomError>(
   fn: () => T | Promise<T>,
   errorFactory?: (cause?: Error) => E,
 ): Result<T, E> {
-  return Promise.try(fn)
+  return tryPromise(fn)
     .then((res) => [null, res] as [null, T])
     .catch((err) => {
       // If already a CustomError of expected type, pass through

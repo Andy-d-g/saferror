@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import { safeTry } from "../safe-try";
 import CustomError from "../custom-error";
 import { UnknownError } from "../unknown-error";
@@ -104,6 +104,67 @@ describe("safeTry", () => {
       );
       expect(err).toBe(original);
       expect(err!.message).toBe("already custom");
+    });
+  });
+
+  describe("fallback when Promise.try is unavailable", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let saved: unknown;
+
+    beforeEach(() => {
+      saved = (Promise as any).try;
+      (Promise as any).try = undefined;
+    });
+
+    afterEach(() => {
+      (Promise as any).try = saved;
+    });
+
+    it("should return [null, result] for sync success", async () => {
+      const [err, result] = await safeTry(() => 42);
+      expect(err).toBeNull();
+      expect(result).toBe(42);
+    });
+
+    it("should return [error] when sync function throws", async () => {
+      const [err] = await safeTry(() => {
+        throw new Error("sync throw without Promise.try");
+      });
+      expect(err).toBeInstanceOf(CustomError);
+      expect(err!.message).toBe("sync throw without Promise.try");
+    });
+
+    it("should return [null, result] for async success", async () => {
+      const [err, result] = await safeTry(async () => "async without Promise.try");
+      expect(err).toBeNull();
+      expect(result).toBe("async without Promise.try");
+    });
+
+    it("should return [error] when async function rejects", async () => {
+      const [err] = await safeTry(async () => {
+        throw new Error("async reject without Promise.try");
+      });
+      expect(err).toBeInstanceOf(CustomError);
+      expect(err!.message).toBe("async reject without Promise.try");
+    });
+
+    it("should use error factory in fallback path", async () => {
+      const [err] = await safeTry(
+        () => {
+          throw new Error("original");
+        },
+        (cause) => new TestError("wrapped", cause),
+      );
+      expect(err).toBeInstanceOf(TestError);
+      expect(err!.message).toBe("wrapped");
+    });
+
+    it("should pass through CustomError without wrapping in fallback path", async () => {
+      const original = new UnknownError({ message: "already custom" });
+      const [err] = await safeTry(() => {
+        throw original;
+      });
+      expect(err).toBe(original);
     });
   });
 

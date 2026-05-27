@@ -1,6 +1,6 @@
 {
   "name": "saferror",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Type-safe error handling for TypeScript: structured errors, safe try/catch, and serialization.",
   "keywords": [
     "error",
@@ -37,7 +37,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --platform node --clean",
+    "build": "tsup src/index.ts --format esm --dts --platform neutral --clean",
     "typecheck": "tsc --noEmit",
     "test": "vp test run",
     "test:watch": "vp test",
@@ -50,6 +50,6 @@
     "vite-plus": "^0.1.22"
   },
   "engines": {
-    "node": ">=23.0.0"
+    "node": ">=18.0.0"
   }
 }

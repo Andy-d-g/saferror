@@ -4,7 +4,8 @@
 [![CI](https://github.com/andyguillaume/saferror/actions/workflows/ci.yml/badge.svg)](https://github.com/andyguillaume/saferror/actions/workflows/ci.yml)
 [![npm downloads](https://img.shields.io/npm/dm/saferror.svg?style=flat-square)](https://www.npmjs.com/package/saferror)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg?style=flat-square)](LICENSE)
-[![Node.js >=23](https://img.shields.io/badge/node-%3E%3D23-brightgreen?style=flat-square)](https://nodejs.org)
+[![Node.js >=18](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](https://nodejs.org)
+[![Browser](https://img.shields.io/badge/browser-supported-brightgreen?style=flat-square)](https://caniuse.com/cryptography)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 
 > Type-safe, structured error handling for TypeScript. Stop catching `unknown`, start catching what you actually expect.
@@ -38,7 +39,7 @@ yarn add saferror
 pnpm add saferror
 ```
 
-> **Requirements:** Node.js ≥ 23.0.0, TypeScript ≥ 5.0.
+> **Requirements:** Node.js ≥ 18.0.0, TypeScript ≥ 5.0, or any modern browser (Chrome 11+, Firefox 21+, Safari 6.1+).
 
 ---
 
@@ -80,7 +81,7 @@ The base class for all your application errors. Extend it to create typed, struc
 
 ```ts
 abstract class CustomError<T extends Record<string, unknown> = Record<string, unknown>> extends Error {
-  uid: string;           // Auto-generated UUID (crypto.randomUUID)
+  uid: string;           // Auto-generated UUID — uses crypto.randomUUID when available, falls back to crypto.getRandomValues
   statusCode: number;    // Default: 400. Override per subclass.
   info: T;               // Arbitrary structured metadata
   cause?: Error;         // Native ES2022 cause chain
