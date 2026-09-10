@@ -46,4 +46,44 @@ describe("generateUUID", () => {
       expect(["8", "9", "a", "b"]).toContain(uuid[19]);
     });
   });
+
+  describe("fallback when Web Crypto is entirely unavailable", () => {
+    const descriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+
+    beforeEach(() => {
+      Object.defineProperty(globalThis, "crypto", {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+    });
+
+    afterEach(() => {
+      if (descriptor) Object.defineProperty(globalThis, "crypto", descriptor);
+    });
+
+    it("should not throw", () => {
+      expect(() => generateUUID()).not.toThrow();
+    });
+
+    it("should return a valid UUID v4", () => {
+      expect(generateUUID()).toMatch(UUID_REGEX);
+    });
+
+    it("should return unique values", () => {
+      const a = generateUUID();
+      const b = generateUUID();
+      expect(a).not.toBe(b);
+    });
+
+    it("should set version bits to 4", () => {
+      const uuid = generateUUID();
+      expect(uuid[14]).toBe("4");
+    });
+
+    it("should set variant bits correctly", () => {
+      const uuid = generateUUID();
+      expect(["8", "9", "a", "b"]).toContain(uuid[19]);
+    });
+  });
 });

@@ -81,7 +81,7 @@ The base class for all your application errors. Extend it to create typed, struc
 
 ```ts
 abstract class CustomError<T extends Record<string, unknown> = Record<string, unknown>> extends Error {
-  uid: string;           // Auto-generated UUID — uses crypto.randomUUID when available, falls back to crypto.getRandomValues
+  uid: string;           // Auto-generated UUID — crypto.randomUUID, else crypto.getRandomValues, else Math.random (never throws)
   statusCode: number;    // Default: 400. Override per subclass.
   info: T;               // Arbitrary structured metadata
   cause?: Error;         // Native ES2022 cause chain

@@ -207,3 +207,97 @@ describe("safeTry", () => {
     });
   });
 });
+
+/**
+ * Regression guard for the production failure seen on Mobile Safari 17.6:
+ * `TypeError: Promise.try is not a function`.
+ *
+ * `Promise.try` needs Safari/iOS 18.2+ and `crypto.randomUUID` needs a secure
+ * context, but build targets like `safari16.4` only transpile syntax, never
+ * runtime APIs. These tests pin the whole legacy environment so a future change
+ * cannot reintroduce an unguarded modern API on the safeTry path.
+ */
+describe("legacy runtime regression (iOS <= 18.1)", () => {
+  const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+  let savedTry: unknown;
+
+  beforeEach(() => {
+    savedTry = (Promise as unknown as Record<string, unknown>).try;
+    (Promise as unknown as Record<string, unknown>).try = undefined;
+    Object.defineProperty(globalThis, "crypto", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    (Promise as unknown as Record<string, unknown>).try = savedTry;
+    if (cryptoDescriptor) Object.defineProperty(globalThis, "crypto", cryptoDescriptor);
+  });
+
+  it("should not reference Promise.try when it is unavailable", async () => {
+    // Accessing the property at all would throw in the broken build.
+    expect((Promise as unknown as Record<string, unknown>).try).toBeUndefined();
+    const [err, result] = await safeTry(() => "ok");
+    expect(err).toBeNull();
+    expect(result).toBe("ok");
+  });
+
+  it("should resolve sync success without any modern API", async () => {
+    const [err, result] = await safeTry(() => 1 + 1);
+    expect(err).toBeNull();
+    expect(result).toBe(2);
+  });
+
+  it("should resolve async success without any modern API", async () => {
+    const [err, result] = await safeTry(async () => "async ok");
+    expect(err).toBeNull();
+    expect(result).toBe("async ok");
+  });
+
+  it("should convert a sync throw into an error tuple, never a raised throw", async () => {
+    let raised: unknown = null;
+    let tuple: [CustomError] | [null, never] | undefined;
+    try {
+      tuple = await safeTry(() => {
+        throw new Error("legacy sync boom");
+      });
+    } catch (e) {
+      raised = e;
+    }
+    expect(raised).toBeNull();
+    expect(tuple![0]).toBeInstanceOf(CustomError);
+    expect(tuple![0]!.message).toBe("legacy sync boom");
+  });
+
+  it("should convert an async rejection into an error tuple", async () => {
+    const [err] = await safeTry(async () => {
+      throw new Error("legacy async boom");
+    });
+    expect(err).toBeInstanceOf(UnknownError);
+    expect(err!.message).toBe("legacy async boom");
+  });
+
+  it("should still build a usable uid on the error path", async () => {
+    const [err] = await safeTry(() => {
+      throw new Error("needs uid");
+    });
+    expect(typeof err!.uid).toBe("string");
+    expect(err!.uid).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  });
+
+  it("should still apply the error factory", async () => {
+    const [err] = await safeTry(
+      () => {
+        throw new Error("original");
+      },
+      (cause) => new TestError("wrapped in legacy env", cause),
+    );
+    expect(err).toBeInstanceOf(TestError);
+    expect(err!.message).toBe("wrapped in legacy env");
+    expect(err!.cause!.message).toBe("original");
+  });
+});

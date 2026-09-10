@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vite-plus/test";
+import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
 import CustomError, { isCustomError } from "../custom-error";
 import { UnknownError } from "../unknown-error";
 
@@ -126,5 +126,51 @@ describe("isCustomError", () => {
     expect(isCustomError(null)).toBe(false);
     expect(isCustomError(undefined)).toBe(false);
     expect(isCustomError({})).toBe(false);
+  });
+});
+
+/**
+ * Regression guard: `generateUUID()` runs inside the CustomError constructor, so a
+ * throw there escapes `safeTry` and breaks the library's never-throw guarantee.
+ * Constructing an error must succeed even with no Web Crypto at all.
+ */
+describe("CustomError construction without Web Crypto", () => {
+  const cryptoDescriptor = Object.getOwnPropertyDescriptor(globalThis, "crypto");
+
+  beforeEach(() => {
+    Object.defineProperty(globalThis, "crypto", {
+      value: undefined,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    if (cryptoDescriptor) Object.defineProperty(globalThis, "crypto", cryptoDescriptor);
+  });
+
+  it("should not throw when constructing an error", () => {
+    expect(() => new UnknownError({ message: "no crypto" })).not.toThrow();
+  });
+
+  it("should still assign a well-formed uid", () => {
+    const error = new UnknownError({ message: "no crypto" });
+    expect(error.uid).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  });
+
+  it("should assign distinct uids across instances", () => {
+    const a = new UnknownError({ message: "a" });
+    const b = new UnknownError({ message: "b" });
+    expect(a.uid).not.toBe(b.uid);
+  });
+
+  it("should preserve message, cause and toString output", () => {
+    const cause = new Error("root cause");
+    const error = new UnknownError({ message: "outer", cause });
+    expect(error.message).toBe("outer");
+    expect(error.cause).toBe(cause);
+    expect(error.toString()).toContain(`[uid=${error.uid}]`);
   });
 });
